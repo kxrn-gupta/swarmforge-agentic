@@ -6,7 +6,7 @@
   "timestamp": "2026-09-25T11:42:00+05:30",
   "mode": "Orchestrator / SDLC Automation",
   "context": {
-    "root": "E:\\swarmforge_events\\swarmforge-agentic",
+    "root": "swarmforge-agentic",
     "language": "Python 3.8+ Standard Library",
     "files_analyzed": 14,
     "lines_of_code": 2480,
