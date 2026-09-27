@@ -41,6 +41,14 @@ DEFAULT_CONFIG = {
     "defaults": {"timeout": 900, "max_parallel": 4, "bin_dir": "",
                  "cost_per_million_tokens": 5.0},
     "providers": {
+        "bob": {
+            "binary": "bob",
+            "command": ["bob", "-p"],
+            "model_flag": ["--model"],
+            "approve_flags": ["--yolo"],
+            "install": {"npm": "npm i -g @ibm/bob-cli"},
+            "roles": ["planner", "scaffolder", "coder", "reviewer", "fixer"],
+        },
         "opencode": {
             "binary": "opencode",
             "command": ["opencode", "run"],
@@ -106,10 +114,10 @@ DEFAULT_CONFIG = {
         },
     },
     "roles": {
-        "planner": {"providers": ["opencode", "grok", "agy"]},
+        "planner": {"providers": ["bob", "opencode", "grok", "agy"]},
         "scaffolder": {"providers": ["opencode", "grok", "agy"]},
         "coder": {"providers": ["opencode", "grok", "agy", "gemini", "copilot"]},
-        "reviewer": {"providers": ["opencode", "agy", "gemini", "grok", "copilot"]},
+        "reviewer": {"providers": ["bob", "opencode", "agy", "gemini", "grok", "copilot"]},
         "fixer": {"providers": ["opencode", "agy", "copilot"]},
     },
 }
@@ -1841,6 +1849,12 @@ def run_pipeline(cfg, avail, task, workspace, args, timeout, max_parallel,
     diffs = compute_diffs(baseline, after)
     status.log(f"code changes: {len(diffs)} file(s) modified")
     write_report(ws, task, plan, results, issues, outroot, cfg, diffs=diffs)
+    try:
+        from swarmforge.bob import BobContextBridge
+        BobContextBridge(ws).export_session(task, plan, results, outroot)
+        print(f"[bob]    {ws / '.bob' / 'session.json'}")
+    except Exception:
+        pass
     record_run_usage(cfg, ledger, results)
     status.set(phase="done")
     print(f"\n[report] {ws / 'REPORT.md'}")
@@ -1874,6 +1888,12 @@ def continue_pipeline(cfg, avail, workspace, args, timeout, ledger=None, models=
     after = snapshot_tree(outroot)
     diffs = compute_diffs(baseline, after)
     write_report(ws, task, plan, results, issues, outroot, cfg, diffs=diffs)
+    try:
+        from swarmforge.bob import BobContextBridge
+        BobContextBridge(ws).export_session(task, plan, results, outroot)
+        print(f"[bob]    {ws / '.bob' / 'session.json'}")
+    except Exception:
+        pass
     record_run_usage(cfg, ledger, results)
     status.set(phase="done")
     print(f"\n[report] {ws / 'REPORT.md'}")
